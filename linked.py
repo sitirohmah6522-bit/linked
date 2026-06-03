@@ -1,8 +1,5 @@
 import streamlit as st
 
-# ===============================
-# NODE BARANG
-# ===============================
 class BarangNode:
     def _init_(self, kode, nama, stok):
         self.kode = kode
@@ -11,9 +8,6 @@ class BarangNode:
         self.next = None
 
 
-# ===============================
-# LINKED LIST GUDANG
-# ===============================
 class GudangLinkedList:
     def _init_(self):
         self.head = None
@@ -25,7 +19,7 @@ class GudangLinkedList:
             self.head = node_baru
         else:
             bantu = self.head
-            while bantu.next:
+            while bantu.next is not None:
                 bantu = bantu.next
             bantu.next = node_baru
 
@@ -33,7 +27,7 @@ class GudangLinkedList:
         data = []
         bantu = self.head
 
-        while bantu:
+        while bantu is not None:
             data.append({
                 "Kode Barang": bantu.kode,
                 "Nama Barang": bantu.nama,
@@ -46,7 +40,7 @@ class GudangLinkedList:
     def cari_barang(self, kode):
         bantu = self.head
 
-        while bantu:
+        while bantu is not None:
             if bantu.kode == kode:
                 return bantu
             bantu = bantu.next
@@ -60,32 +54,34 @@ class GudangLinkedList:
             self.head = bantu.next
             return True
 
-        prev = None
-        while bantu:
+        sebelumnya = None
+        while bantu is not None:
             if bantu.kode == kode:
-                prev.next = bantu.next
+                sebelumnya.next = bantu.next
                 return True
-            prev = bantu
+            sebelumnya = bantu
             bantu = bantu.next
 
         return False
 
 
-# ===============================
-# STREAMLIT UI
-# ===============================
 st.set_page_config(page_title="Linked List Gudang", page_icon="📦")
 
 st.title("📦 Sistem Gudang Menggunakan Linked List")
 st.write("Aplikasi ini menggunakan struktur data Single Linked List.")
 
-if "gudang" not in st.session_state:
+# RESET object lama yang error
+if "gudang" not in st.session_state or not hasattr(st.session_state.gudang, "head"):
     st.session_state.gudang = GudangLinkedList()
 
-menu = st.tabs(["➕ Tambah Barang", "📋 Lihat Barang", "🔍 Cari Barang", "🗑️ Hapus Barang"])
+tab1, tab2, tab3, tab4 = st.tabs([
+    "➕ Tambah Barang",
+    "📋 Lihat Barang",
+    "🔍 Cari Barang",
+    "🗑️ Hapus Barang"
+])
 
-# TAB TAMBAH
-with menu[0]:
+with tab1:
     st.subheader("Tambah Data Barang")
 
     kode = st.text_input("Kode Barang")
@@ -99,8 +95,7 @@ with menu[0]:
         else:
             st.warning("Kode dan nama barang harus diisi.")
 
-# TAB LIHAT
-with menu[1]:
+with tab2:
     st.subheader("Data Barang Gudang")
 
     data = st.session_state.gudang.tampilkan_barang()
@@ -110,8 +105,7 @@ with menu[1]:
     else:
         st.info("Belum ada data barang.")
 
-# TAB CARI
-with menu[2]:
+with tab3:
     st.subheader("Cari Barang")
 
     kode_cari = st.text_input("Masukkan kode barang yang dicari")
@@ -127,8 +121,7 @@ with menu[2]:
         else:
             st.error("Barang tidak ditemukan.")
 
-# TAB HAPUS
-with menu[3]:
+with tab4:
     st.subheader("Hapus Barang")
 
     kode_hapus = st.text_input("Masukkan kode barang yang ingin dihapus")
@@ -140,3 +133,7 @@ with menu[3]:
             st.success("Barang berhasil dihapus.")
         else:
             st.error("Barang tidak ditemukan.")
+
+if st.button("Reset Data"):
+    st.session_state.gudang = GudangLinkedList()
+    st.success("Data berhasil direset.")
