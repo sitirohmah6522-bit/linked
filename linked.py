@@ -1,7 +1,7 @@
 import streamlit as st
 
 class BarangNode:
-    def _init_(self, kode, nama, stok):
+    def __init__(self, kode, nama, stok):
         self.kode = kode
         self.nama = nama
         self.stok = stok
@@ -9,7 +9,7 @@ class BarangNode:
 
 
 class GudangLinkedList:
-    def _init_(self):
+    def __init__(self):
         self.head = None
 
     def tambah_barang(self, kode, nama, stok):
