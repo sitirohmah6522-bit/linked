@@ -1,19 +1,27 @@
 import streamlit as st
+from datetime import datetime
 
 class BarangNode:
-    def __init__(self, kode, nama, stok):
+    def __init__(self, kode, nama, kategori, stok, harga):
         self.kode = kode
         self.nama = nama
+        self.kategori = kategori
         self.stok = stok
+        self.harga = harga
         self.next = None
 
 
 class GudangLinkedList:
     def __init__(self):
         self.head = None
+        self.riwayat = []
 
-    def tambah_barang(self, kode, nama, stok):
-        node_baru = BarangNode(kode, nama, stok)
+    def tambah_riwayat(self, aktivitas):
+        waktu = datetime.now().strftime("%d-%m-%Y %H:%M:%S")
+        self.riwayat.append({"Waktu": waktu, "Aktivitas": aktivitas})
+
+    def tambah_barang(self, kode, nama, kategori, stok, harga):
+        node_baru = BarangNode(kode, nama, kategori, stok, harga)
 
         if self.head is None:
             self.head = node_baru
@@ -23,6 +31,8 @@ class GudangLinkedList:
                 bantu = bantu.next
             bantu.next = node_baru
 
+        self.tambah_riwayat(f"Menambahkan barang {nama} sebanyak {stok}")
+
     def tampilkan_barang(self):
         data = []
         bantu = self.head
@@ -31,7 +41,10 @@ class GudangLinkedList:
             data.append({
                 "Kode Barang": bantu.kode,
                 "Nama Barang": bantu.nama,
-                "Stok": bantu.stok
+                "Kategori": bantu.kategori,
+                "Stok": bantu.stok,
+                "Harga": bantu.harga,
+                "Total Nilai": bantu.stok * bantu.harga
             })
             bantu = bantu.next
 
@@ -51,16 +64,64 @@ class GudangLinkedList:
 
         return hasil
 
+    def cari_by_kode(self, kode):
+        bantu = self.head
+
+        while bantu is not None:
+            if bantu.kode == kode:
+                return bantu
+            bantu = bantu.next
+
+        return None
+
+    def tambah_stok(self, kode, jumlah):
+        barang = self.cari_by_kode(kode)
+
+        if barang:
+            barang.stok += jumlah
+            self.tambah_riwayat(f"Stok {barang.nama} bertambah {jumlah}")
+            return True
+
+        return False
+
+    def kurangi_stok(self, kode, jumlah):
+        barang = self.cari_by_kode(kode)
+
+        if barang:
+            if barang.stok >= jumlah:
+                barang.stok -= jumlah
+                self.tambah_riwayat(f"Stok {barang.nama} berkurang {jumlah}")
+                return "berhasil"
+            else:
+                return "stok_kurang"
+
+        return "tidak_ditemukan"
+
+    def edit_barang(self, kode, nama_baru, kategori_baru, stok_baru, harga_baru):
+        barang = self.cari_by_kode(kode)
+
+        if barang:
+            barang.nama = nama_baru
+            barang.kategori = kategori_baru
+            barang.stok = stok_baru
+            barang.harga = harga_baru
+            self.tambah_riwayat(f"Data barang {kode} berhasil diedit")
+            return True
+
+        return False
+
     def hapus_barang(self, kode):
         bantu = self.head
 
         if bantu is not None and bantu.kode == kode:
+            self.tambah_riwayat(f"Barang {bantu.nama} dihapus")
             self.head = bantu.next
             return True
 
         sebelumnya = None
         while bantu is not None:
             if bantu.kode == kode:
+                self.tambah_riwayat(f"Barang {bantu.nama} dihapus")
                 sebelumnya.next = bantu.next
                 return True
             sebelumnya = bantu
@@ -68,35 +129,64 @@ class GudangLinkedList:
 
         return False
 
-    def kurangi_stok(self, kode, jumlah):
+    def stok_menipis(self):
+        data = []
         bantu = self.head
 
         while bantu is not None:
-            if bantu.kode == kode:
-                if bantu.stok >= jumlah:
-                    bantu.stok -= jumlah
-                    return "berhasil"
-                else:
-                    return "stok_kurang"
+            if bantu.stok <= 5:
+                data.append({
+                    "Kode Barang": bantu.kode,
+                    "Nama Barang": bantu.nama,
+                    "Stok": bantu.stok
+                })
             bantu = bantu.next
 
-        return "tidak_ditemukan"
+        return data
+
+    def statistik_gudang(self):
+        total_barang = 0
+        total_stok = 0
+        total_nilai = 0
+        stok_terbanyak = None
+        stok_tersedikit = None
+
+        bantu = self.head
+
+        while bantu is not None:
+            total_barang += 1
+            total_stok += bantu.stok
+            total_nilai += bantu.stok * bantu.harga
+
+            if stok_terbanyak is None or bantu.stok > stok_terbanyak.stok:
+                stok_terbanyak = bantu
+
+            if stok_tersedikit is None or bantu.stok < stok_tersedikit.stok:
+                stok_tersedikit = bantu
+
+            bantu = bantu.next
+
+        return total_barang, total_stok, total_nilai, stok_terbanyak, stok_tersedikit
 
 
-st.set_page_config(page_title="Linked List Gudang Retail", page_icon="📦")
+st.set_page_config(page_title="Sistem Gudang Retail", page_icon="📦")
 
-st.title("📦 Sistem Gudang Retail Menggunakan Linked List")
-st.write("Aplikasi gudang sederhana dengan fitur tambah, lihat, cari cepat, hapus, dan pengurangan stok barang.")
+st.title("📦 Sistem Gudang Retail Menggunakan Single Linked List")
+st.write("Aplikasi ini memiliki fitur tambah barang, tambah stok, kurangi stok, edit barang, kategori, notifikasi stok menipis, riwayat transaksi, statistik, harga, dan total nilai gudang.")
 
 if "gudang" not in st.session_state or not hasattr(st.session_state.gudang, "head"):
     st.session_state.gudang = GudangLinkedList()
 
-tab1, tab2, tab3, tab4, tab5 = st.tabs([
+tab1, tab2, tab3, tab4, tab5, tab6, tab7, tab8, tab9 = st.tabs([
     "➕ Tambah Barang",
     "📋 Lihat Barang",
     "🔍 Cari Cepat",
+    "📥 Tambah Stok",
     "➖ Kurangi Stok",
-    "🗑️ Hapus Barang"
+    "✏️ Edit Barang",
+    "⚠️ Stok Menipis",
+    "📊 Statistik",
+    "🕒 Riwayat"
 ])
 
 with tab1:
@@ -104,11 +194,13 @@ with tab1:
 
     kode = st.text_input("Kode Barang")
     nama = st.text_input("Nama Barang")
+    kategori = st.selectbox("Kategori Barang", ["Makanan", "Minuman", "Snack", "Sembako", "Peralatan", "Lainnya"])
     stok = st.number_input("Stok Barang", min_value=0, step=1)
+    harga = st.number_input("Harga Barang", min_value=0, step=500)
 
     if st.button("Tambah Barang"):
         if kode and nama:
-            st.session_state.gudang.tambah_barang(kode, nama, stok)
+            st.session_state.gudang.tambah_barang(kode, nama, kategori, stok, harga)
             st.success("Barang berhasil ditambahkan!")
         else:
             st.warning("Kode dan nama barang harus diisi.")
@@ -135,16 +227,18 @@ with tab3:
         hasil = st.session_state.gudang.cari_barang(kata_kunci)
 
         if hasil:
-            st.success("Barang ditemukan!")
-
             data_hasil = []
             for barang in hasil:
                 data_hasil.append({
                     "Kode Barang": barang.kode,
                     "Nama Barang": barang.nama,
-                    "Stok": barang.stok
+                    "Kategori": barang.kategori,
+                    "Stok": barang.stok,
+                    "Harga": barang.harga,
+                    "Total Nilai": barang.stok * barang.harga
                 })
 
+            st.success("Barang ditemukan!")
             st.table(data_hasil)
         else:
             st.error("Barang tidak ditemukan.")
@@ -153,11 +247,26 @@ with tab3:
 
 
 with tab4:
-    st.subheader("Pengurangan Stok Barang")
-    st.write("Fitur ini digunakan saat barang keluar atau terjual.")
+    st.subheader("Tambah Stok Barang")
 
-    kode_kurang = st.text_input("Kode barang yang stoknya dikurangi")
-    jumlah_kurang = st.number_input("Jumlah pengurangan stok", min_value=1, step=1)
+    kode_tambah = st.text_input("Kode barang yang stoknya ingin ditambah")
+    jumlah_tambah = st.number_input("Jumlah stok masuk", min_value=1, step=1)
+
+    if st.button("Tambah Stok"):
+        berhasil = st.session_state.gudang.tambah_stok(kode_tambah, jumlah_tambah)
+
+        if berhasil:
+            st.success("Stok barang berhasil ditambahkan.")
+        else:
+            st.error("Barang tidak ditemukan.")
+
+
+with tab5:
+    st.subheader("Kurangi Stok Barang")
+    st.write("Digunakan saat barang keluar atau terjual.")
+
+    kode_kurang = st.text_input("Kode barang yang stoknya ingin dikurangi")
+    jumlah_kurang = st.number_input("Jumlah stok keluar", min_value=1, step=1)
 
     if st.button("Kurangi Stok"):
         hasil = st.session_state.gudang.kurangi_stok(kode_kurang, jumlah_kurang)
@@ -170,20 +279,16 @@ with tab4:
             st.error("Barang tidak ditemukan.")
 
 
-with tab5:
-    st.subheader("Hapus Barang")
+with tab6:
+    st.subheader("Edit Data Barang")
 
-    kode_hapus = st.text_input("Masukkan kode barang yang ingin dihapus")
+    kode_edit = st.text_input("Masukkan kode barang yang ingin diedit")
+    barang_edit = st.session_state.gudang.cari_by_kode(kode_edit)
 
-    if st.button("Hapus"):
-        berhasil = st.session_state.gudang.hapus_barang(kode_hapus)
-
-        if berhasil:
-            st.success("Barang berhasil dihapus.")
-        else:
-            st.error("Barang tidak ditemukan.")
-
-
-if st.button("Reset Data"):
-    st.session_state.gudang = GudangLinkedList()
-    st.success("Data berhasil direset.")
+    if barang_edit:
+        nama_baru = st.text_input("Nama Baru", value=barang_edit.nama)
+        kategori_baru = st.selectbox(
+            "Kategori Baru",
+            ["Makanan", "Minuman", "Snack", "Sembako", "Peralatan", "Lainnya"],
+            index=["Makanan", "Minuman", "Snack", "Sembako", "Peralatan", "Lainnya"].index(barang_edit.kategori)
+        )
