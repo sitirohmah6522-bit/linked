@@ -2,7 +2,7 @@ import streamlit as st
 from datetime import datetime
 
 class BarangNode:
-    def _init_(self, kode, nama, kategori, stok, harga):
+    def __init__(self, kode, nama, kategori, stok, harga):
         self.kode = kode
         self.nama = nama
         self.kategori = kategori
@@ -12,7 +12,7 @@ class BarangNode:
 
 
 class GudangLinkedList:
-    def _init_(self):
+    def __init__(self):
         self.head = None
         self.riwayat = []
 
