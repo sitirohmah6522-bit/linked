@@ -205,9 +205,8 @@ with tab2:
 
     if data:
         st.table(data)
-     else:
+    else:
         st.info("Belum ada data barang.")
-
 
 with tab3:
     st.subheader("Cari Cepat Barang")
